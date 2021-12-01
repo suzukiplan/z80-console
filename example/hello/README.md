@@ -16,12 +16,15 @@ make
 ## Result
 
 ```bash
-% z80con -v hello.bin 2>/dev/null
+% make
+../../z80con -v hello.bin
+Start the ConsoleComputer
 [0000] LD HL<$0000>, $000A
 [0003] LD A<$00>, $0E
 [0005] OUT ($0F), A<$0E>
 Hello, World!
 [0007] LD A<$0E>, $00
 [0009] RET to $FFFF (SP<$0000>)
+ConsoleComputer has been ended (code: 0)
 ```
 
