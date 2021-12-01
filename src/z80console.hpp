@@ -89,6 +89,7 @@ class Z80Console
         if (cpu) delete cpu;
     }
 
+  private:
     void hardwareReset()
     {
         romCount = 0;
@@ -100,6 +101,7 @@ class Z80Console
         reset();
     }
 
+  public:
     void reset()
     {
         memset(&devices, 0, sizeof(devices));
