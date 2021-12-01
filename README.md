@@ -68,9 +68,11 @@ z80con [-p {i|o} {00|01|02...FF} my-plugin-so:function]
   - 複数個指定できる
   - 1ファイル = 8KB パディング（8KB 未満の場合、末尾が 0x00 で埋められる）
 
-## Programming Manual (Z80)
+## Examples
 
-Console Computer for Z80 で動作する Z80 のプログラム
+| Path | Description |
+|:-:|:-|
+| [example/hello](example/hello) | `Hello, World!` と 改行 を 標準出力 |
 
 ## Default Memory Map
 
