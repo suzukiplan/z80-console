@@ -5,9 +5,10 @@
 ## Pre-requests
 
 - GNU Make
+- Clang C++
 - [z88dk](https://github.com/z88dk/z88dk) (z80asm command)
 
-## How to use
+## How to build and execute
 
 ```bash
 make
