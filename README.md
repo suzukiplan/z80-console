@@ -11,15 +11,16 @@ Console Computer for Z80 は、Z80 で記述されたプログラムを実行で
 - CPU: Z80 互換
   - Console Computer for Z80 としてのクロックレート規定はしない
   - Z80A 相当の同期（3,579,545 Hzでの動作）は可能
+  - 実際に存在しない速度（例: 1,000 Hz）などでの同期も可能
 - MMU _(Memory Mangement Unit)_
-  - 8KB 区切り (8ページ) でバンク切り替え可能な MMU を搭載
-  - プログラム（ROM）サイズ: 最小 8KB 〜 最大 8KB x 256 (2MB)
-  - メインメモリ（RAM）サイズ: 最小 8KB 〜 最大 8KB x 256 (2MB)
+  - 8KB 区切り (8ページ) で最大 256 バンクに切り替え可能な MMU を搭載
+    - プログラム（ROM）サイズ: 最小 8KB 〜 最大 8KB x 256 (2MB)
+    - メインメモリ（RAM）サイズ: 最小 8KB 〜 最大 8KB x 256 (2MB)
 - I/O:
   - 最小限のシステム I/O を提供:
     - 0x00 ~ 0x07: バンク切り替え
     - 0x0F: 標準入出力
-  - 外部入出力を User Port Plugin による外部入出力機構
+  - User Port Plugin による外部入出力機構を提供
 - No BIOS _(I DON'T LIKE IT BECAUSE UNFREE)_
 
 ## Components
