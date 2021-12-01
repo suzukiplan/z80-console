@@ -1,9 +1,17 @@
-all: hello.bin ../../z80con
-	../../z80con -v hello.bin
+CONSOLE=../../z80con
+PROJECT=hello
 
-../../z80con:
+all: $(CONSOLE) $(PROJECT).bin
+	$(CONSOLE) -v $(PROJECT).bin
+
+clean:
+	rm -f $(PROJECT).bin
+	rm -f $(PROJECT).o
+	rm -f $(CONSOLE) 
+
+$(CONSOLE):
 	cd ../.. && make
 
-hello.bin: hello.asm
-	z80asm -b hello.asm
+$(PROJECT).bin: $(PROJECT).asm
+	z80asm -b $(PROJECT).asm
 
