@@ -77,7 +77,13 @@ class Z80Console
                 _this->cpu->requestBreak();
             }
         });
-        hardwareReset();
+        romCount = 0;
+        memset(rom, 0, sizeof(rom));
+        ramCount = 256;
+        ramBankIndexStart = 4;
+        ramBankIndexEnd = 7;
+        endFlag = false;
+        reset();
     }
 
     ~Z80Console()
@@ -89,19 +95,6 @@ class Z80Console
         if (cpu) delete cpu;
     }
 
-  private:
-    void hardwareReset()
-    {
-        romCount = 0;
-        memset(rom, 0, sizeof(rom));
-        ramCount = 256;
-        ramBankIndexStart = 4;
-        ramBankIndexEnd = 7;
-        endFlag = false;
-        reset();
-    }
-
-  public:
     void reset()
     {
         memset(&devices, 0, sizeof(devices));
