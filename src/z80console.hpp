@@ -40,6 +40,8 @@ class Z80Console
     struct ExternalDevices {
         void (*out[256])(void*, unsigned char, unsigned char);
         unsigned char (*in[256])(void*, unsigned char);
+        void (*write[256])(void*, unsigned short, unsigned char);
+        unsigned char (*read[256])(void*, unsigned short);
     } devices;
 
     int romCount;
@@ -108,6 +110,20 @@ class Z80Console
     {
         if (startFlag) return false;
         devices.in[portNumber] = in;
+        return true;
+    }
+
+    bool addWriteMemoryMap(unsigned short address, void (*write)(void*, unsigned short, unsigned char))
+    {
+        if (startFlag) return false;
+        devices.write[(address & 0xFF00) >> 8] = write;
+        return true;
+    }
+
+    bool addReadMemoryMap(unsigned short address, unsigned char (*read)(void*, unsigned short))
+    {
+        if (startFlag) return false;
+        devices.read[(address & 0xFF00) >> 8] = read;
         return true;
     }
 
@@ -181,6 +197,10 @@ class Z80Console
     {
         auto _this = (Z80Console*)ctx;
         if (!_this->startFlag || _this->endFlag) return 0xFF;
+        unsigned char page = (addr & 0xFF00) >> 8;
+        if (_this->devices.read[page]) {
+            return _this->devices.read[page](ctx, addr);
+        }
         int n = (addr & 0xE000) >> 13;
         if (_this->isRamIndex(n)) {
             return _this->ram[n % _this->ramCount][addr & 0x1FFF];
@@ -193,6 +213,11 @@ class Z80Console
     {
         auto _this = (Z80Console*)ctx;
         if (!_this->startFlag || _this->endFlag) return;
+        unsigned char page = (addr & 0xFF00) >> 8;
+        if (_this->devices.write[page]) {
+            _this->devices.write[page](ctx, addr, value);
+            return;
+        }
         int n = (addr & 0xE000) >> 13;
         if (_this->isRamIndex(n)) _this->ram[n % _this->ramCount][addr & 0x1FFF] = value;
     }
