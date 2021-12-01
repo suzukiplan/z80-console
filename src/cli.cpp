@@ -179,6 +179,22 @@ int main(int argc, char* argv[])
                     }
                     break;
                 }
+                case 'm': {
+                    if (argc <= i + 1) {
+                        fprintf(stderr, "error: Missing argument for -m option\n");
+                        printUsage();
+                        return -1;
+                    }
+                    i++;
+                    int ramCount = atoi(argv[i]);
+                    if (ramCount < 0 || 256 < ramCount) {
+                        fprintf(stderr, "error: Invalid value of -m option (%d)\n", ramCount);
+                        printUsage();
+                        return -1;
+                    }
+                    console.setRamCount(ramCount);
+                    break;
+                }
                 case 'v': {
                     bool isStdout = true;
                     if (i + 1 < argc) {
