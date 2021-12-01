@@ -161,11 +161,16 @@ Console Computer for Z80 で動作する Z80 のプログラム
 - 出力レジスタ
   - n/a
 
-(Example)
+(Example: [example/hello/hello.asm]([example/hello/hello.asm))
 
 ```z80
+org $0000
+
+.Start
    ld hl, SAMPLE_TEXT
-   out ($0F), 14
+   ld a, 14
+   out ($0F), a
+   ld a, 0
    ret
 
 SAMPLE_TEXT:
