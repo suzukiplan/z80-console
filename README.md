@@ -228,6 +228,10 @@ extern "C" void functionName(void* z80console, unsigned char port, unsigned char
   - `value`: 出力値
 - 戻り値: n/a
 
+## Memory Mapped I/O
+
+TODO
+
 ## Licenses
 
 ### Console Computer for Z80 - Emulator (MIT)
