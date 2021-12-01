@@ -234,12 +234,10 @@ int main(int argc, char* argv[])
         printUsage();
         return -1;
     }
-    puts("Start the ConsoleComputer");
-    printf("ROM: %d bytes\n", 8192 * console.getRomCount());
-    printf("RAM: %d bytes\n", 8192 * console.getRamCount());
+    fprintf(stderr, "Start the ConsoleComputer");
     while (!console.isEnded()) console.execute(DEFAULT_CLOCK_RATE);
     int returnCode = console.getReturnCode();
-    printf("ConsoleComputer has been ended (code: %d)\n", returnCode);
+    fprintf(stderr, "ConsoleComputer has been ended (code: %d)\n", returnCode);
     for (auto itr = dlHandles.begin(); dlHandles.end() != itr; itr++) dlclose(itr->second);
     return returnCode;
 }
