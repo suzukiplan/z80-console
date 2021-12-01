@@ -4,17 +4,7 @@
 
 Console Computer for Z80 は、Z80 で記述されたプログラムを実行でき、標準入出力機能とプラグイン機能のみ持つシンプルで自由度の高い コンピュータシステム です。
 
-本リポジトリは Console Computer for Z80 のエミュレータ、CLI実装、examples を提供します。
-
-## Warp and Woof
-
-私は自由度な Z80 プログラミング環境を求めています。
-
-世界初（？）のホームコンピュータ標準規格の MSX あたりが良いのではないかと思って触ってみたりしたのですが、実際に触ってみると「自由度があまり高く無い」という結論に至りました。
-
-正確には、初代 MSX はシンプルな反面性能限界が低いため自由度が低く、その点は MSX2 以降で色々と底上げされたものの MSX との互換性維持のため Memory Management Unit (スロット) 周りの仕様がシンプルではない事で自由度が低く感じられました。
-
-そこで、MSX よりもシンプルでありながら、Z80 の限界を最大限引き出せるコンピュータとして、この Console Computer の規格を考え、その実体を Emulator として実装しました。
+本リポジトリは Console Computer for Z80 の [エミュレータ](src/z80console.hpp)、[CLI実装](src/cli.cpp)、[Example](example) を提供します。
 
 ## System Configuration
 
@@ -35,7 +25,7 @@ Console Computer for Z80 は、Z80 で記述されたプログラムを実行で
 ## Components
 
 - [z80.hpp](src/z80.hpp) : CPU (Emulator)
-- [z80con.hpp](src/z80con.hpp) : Console Computer for Z80
+- [z80console.hpp](src/z80console.hpp) : Console Computer for Z80
 - [cli.cpp](src/cli.cpp) : Command Line Interface
 
 ## Command Line Interface
