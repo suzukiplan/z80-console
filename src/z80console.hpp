@@ -29,6 +29,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <vector>
 
 class Z80Console
 {
@@ -37,11 +38,20 @@ class Z80Console
     unsigned char ramBankIndexEnd;
     inline bool isRamIndex(int n) { return ramBankIndexStart <= n && n <= ramBankIndexEnd; }
 
+    class Handler
+    {
+      public:
+        void (*callback)(void*);
+        Handler(void (*callback)(void*)) { this->callback = callback; }
+    };
+
     struct ExternalDevices {
         void (*out[256])(void*, unsigned char, unsigned char);
         unsigned char (*in[256])(void*, unsigned char);
         void (*write[256])(void*, unsigned short, unsigned char);
         unsigned char (*read[256])(void*, unsigned short);
+        std::vector<Handler*> startHandlers;
+        std::vector<Handler*> endHandlers;
     } devices;
 
     int romCount;
@@ -62,6 +72,7 @@ class Z80Console
             auto _this = (Z80Console*)arg;
             // Shutdown the ConsoleComputer when call the RET instruction when SP equals 0
             if (0 == _this->cpu->reg.SP) {
+                for (auto handler : _this->devices.endHandlers) handler->callback(arg);
                 _this->endFlag = true;
                 _this->cpu->requestBreak();
             }
@@ -71,6 +82,10 @@ class Z80Console
 
     ~Z80Console()
     {
+        for (auto handler : devices.startHandlers) delete handler;
+        devices.startHandlers.clear();
+        for (auto handler : devices.endHandlers) delete handler;
+        devices.endHandlers.clear();
         if (cpu) delete cpu;
     }
 
@@ -81,6 +96,7 @@ class Z80Console
         ramCount = 256;
         ramBankIndexStart = 4;
         ramBankIndexEnd = 7;
+        endFlag = false;
         reset();
     }
 
@@ -89,9 +105,12 @@ class Z80Console
         memset(&devices, 0, sizeof(devices));
         memset(ram, 0, sizeof(ram));
         memset(&cpu->reg, 0, sizeof(cpu->reg));
-        this->resetBanks(ramBankIndexStart, ramBankIndexEnd);
-        this->startFlag = false;
-        this->endFlag = false;
+        resetBanks(ramBankIndexStart, ramBankIndexEnd);
+        startFlag = false;
+        if (endFlag) {
+            for (auto handler : devices.endHandlers) handler->callback(this);
+            endFlag = false;
+        }
     }
 
     bool isEnded() { return this->endFlag; }
@@ -124,6 +143,20 @@ class Z80Console
     {
         if (startFlag) return false;
         devices.read[(address & 0xFF00) >> 8] = read;
+        return true;
+    }
+
+    bool addStartHandler(void (*handler)(void*))
+    {
+        if (startFlag) return false;
+        devices.startHandlers.push_back(new Handler(handler));
+        return true;
+    }
+
+    bool addEndHandler(void (*handler)(void*))
+    {
+        if (startFlag) return false;
+        devices.endHandlers.push_back(new Handler(handler));
         return true;
     }
 
@@ -189,7 +222,10 @@ class Z80Console
     int execute(int clocks)
     {
         if (romCount < 1 || endFlag) return 0;
-        startFlag = true;
+        if (!startFlag) {
+            for (auto handler : devices.startHandlers) handler->callback(this);
+            startFlag = true;
+        }
         return cpu->execute(clocks);
     }
 
