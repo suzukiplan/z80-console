@@ -16,15 +16,12 @@ make
 ## Result
 
 ```bash
-% make
-z80asm -b hello.asm
-cd ../.. && make
-clang++ -std=c++14 -Wall -o z80con -I ./src src/cli.cpp
-../../z80con hello.bin
-Start the ConsoleComputer
-ROM: 8192 bytes
-RAM: 2097152 bytes
+% z80con -v hello.bin 2>/dev/null
+[0000] LD HL<$0000>, $000A
+[0003] LD A<$00>, $0E
+[0005] OUT ($0F), A<$0E>
 Hello, World!
-ConsoleComputer has been ended (code: 0)
+[0007] LD A<$0E>, $00
+[0009] RET to $FFFF (SP<$0000>)
 ```
 
