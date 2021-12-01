@@ -54,16 +54,27 @@ static void consumeClock(void* arg, int clocks)
     }
 }
 
-static void* searchSymbol(std::map<std::string, void*>& dlHandles, const char* lib, const char* symbol)
+static void* searchSymbol(Z80Console& console, std::map<std::string, void*>& dlHandles, const char* lib, const char* symbol)
 {
     auto itr = dlHandles.find(lib);
     if (itr == dlHandles.end()) {
+        // Load library
         std::string path = "lib";
         path += lib;
         path += ".so";
         auto handle = dlopen(path.c_str(), RTLD_NOW);
         if (NULL == handle) return NULL;
         dlHandles[lib] = handle;
+
+        // Register start handler if exist
+        auto startHandler = dlsym(handle, "start");
+        if (!startHandler) startHandler = dlsym(handle, "_start");
+        if (startHandler) console.addStartHandler((void (*)(void*))startHandler);
+
+        // Register end handler if exist
+        auto endHandler = dlsym(handle, "end");
+        if (!endHandler) endHandler = dlsym(handle, "_end");
+        if (endHandler) console.addEndHandler((void (*)(void*))endHandler);
     }
     auto fp = dlsym(dlHandles[lib], symbol);
     if (NULL == fp) {
@@ -152,7 +163,7 @@ static bool addPlugin(Z80Console& console, std::map<std::string, void*>& dlHandl
     }
     *symbol++ = '\0';
     fprintf(stderr, "Loading lib%s.so ... ", lib);
-    void* ptr = searchSymbol(dlHandles, lib, symbol);
+    void* ptr = searchSymbol(console, dlHandles, lib, symbol);
     if (!ptr) {
         fprintf(stderr, "error while loading symbol (%s:%s)\n", lib, symbol);
         perror("Reason");

@@ -228,6 +228,46 @@ extern "C" void functionName(void* z80console, unsigned char port, unsigned char
   - `value`: 出力値
 - 戻り値: n/a
 
+### Handle Start
+
+C規約で `start` 関数を定義することで、Console Computer for Z80 起動時の初期化処理を定義することができます。
+
+```c++
+extern "C" void start(void* z80console) {
+    // Console Computer for Z80 起動時の初期化処理を記述
+}
+```
+
+- 引数:
+  - `z80console`:
+    - 呼び出し元 Console Computer for Z80 のインスタンス
+    - [z80console.hpp](src/z80console.hpp) を `include` して　`Z80Console*` へキャスト可能
+- 戻り値: n/a
+- Remarks:
+  - `start` 関数は 1 つの共有ライブラリにつき 1 回のみコールされる
+  - リセットが実行された後の最初の実行のタイミングでも再コールされる
+
+### Handle End
+
+C規約で `end` 関数を定義することで、Console Computer for Z80 停止時の終了処理を定義することができます。
+
+```c++
+extern "C" void end(void* z80console) {
+    // Console Computer for Z80 停止時の終了処理を記述
+}
+```
+
+- 引数:
+  - `z80console`:
+    - 呼び出し元 Console Computer for Z80 のインスタンス
+    - [z80console.hpp](src/z80console.hpp) を `include` して　`Z80Console*` へキャスト可能
+- 戻り値: n/a
+- Remarks:
+  - `end` 関数は 1 つの共有ライブラリにつき 1 回のみコールされる
+  - `end` は次の契機でコールされる:
+    - 停止状態になった時（SP が 0 の時に RET が呼び出されると停止状態になる）
+    - 停止状態になる前にリセットが実行された時
+
 ## Memory Mapped I/O
 
 TODO
