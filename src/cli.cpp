@@ -234,7 +234,7 @@ int main(int argc, char* argv[])
         printUsage();
         return -1;
     }
-    fprintf(stderr, "Start the ConsoleComputer");
+    fprintf(stderr, "Start the ConsoleComputer\n");
     while (!console.isEnded()) console.execute(DEFAULT_CLOCK_RATE);
     int returnCode = console.getReturnCode();
     fprintf(stderr, "ConsoleComputer has been ended (code: %d)\n", returnCode);
