@@ -2,39 +2,44 @@
 
 ## About
 
-Console Computer for Z80 は、Z80 で記述されたプログラムを実行でき、標準入出力機能とプラグイン機能のみ持つシンプルで自由度の高い コンピュータシステム です。
-
-本リポジトリは Console Computer for Z80 の [エミュレータ](src/z80console.hpp)、[CLI実装](src/cli.cpp)、[Example](example) を提供します。
+- Console Computer は、標準では標準入出力機能だけもつ極めてシンプルなコンピュータでありながら、プラグインと Memory Mapped I/O により柔軟な拡張性を併せ持つ **シンプル　＆　自由 な　汎用コンピュータ** です。
+- Console Computer for Z80 は、Console Computer のプログラムを Z80 で記述できます。
+- 本リポジトリは Console Computer の [エミュレータ](src/z80console.hpp)、[UNIX用CLI実装](src/cli_unix.cpp)、[Example](example) を提供します。
 
 ## System Configuration
 
 - CPU: Z80 互換
-  - Console Computer for Z80 としてのクロックレート規定はしない
-  - Z80A 相当の同期（3,579,545 Hzでの動作）は可能
-  - 実際に存在しない速度（例: 1,000 Hz）などでの同期も可能
+  - Console Computer としてのクロックレート規定はなく、通常はベストエフォートでの動作を想定
+  - Z80A 相当での同期（3,579,545 Hzでの動作）をエミュレート可能
+  - 実際に存在しない速度（例: 1,000 Hz）などの同期もエミュレート可能
 - MMU _(Memory Mangement Unit)_
   - 8KB 区切り (8ページ) で最大 256 バンクに切り替え可能な MMU を搭載
     - プログラム（ROM）サイズ: 最小 8KB 〜 最大 8KB x 256 (2MB)
     - メインメモリ（RAM）サイズ: 最小 8KB 〜 最大 8KB x 256 (2MB)
 - I/O:
-  - 最小限のシステム I/O を提供:
+  - 標準では最小限のシステム I/O のみ提供:
     - 0x00 ~ 0x07: バンク切り替え
     - 0x0F: 標準入出力
-  - User Port Plugin による外部入出力機構を提供
+  - IN/OUT 命令（入出力）による拡張入出力機構: **Plugin**
+  - LD 命令（メモリアクセス）による拡張入出力機構: **Memory Mapped I/O**
 - No BIOS _(I DON'T LIKE IT BECAUSE UNFREE)_
 
 ## Components
 
-- [z80.hpp](src/z80.hpp) : CPU (Emulator)
-- [z80console.hpp](src/z80console.hpp) : Console Computer for Z80
-- [cli.cpp](src/cli.cpp) : Command Line Interface
+- [z80.hpp](src/z80.hpp) : Central Processing Unit (Emulator)
+- [z80console.hpp](src/z80console.hpp) : Console Computer (Emulator)
+- [cli_unix.cpp](src/cli_unix.cpp) : Command Line Interface for UNIX
+
+C++11 以降の Clang C++ でコンパイルできます。
 
 ## Command Line Interface
+
+現時点では、BSD 系 UNIX 互換システム（Linux と MacOS を含む）向けの CLI のみ提供しています。
 
 ### z80con
 
 ```bash
-z80con [-p {i|o} {00|01|02...FF} my-plugin-so:function]
+z80con [-p {i|o|r|w} {00|01|02...FF} my-plugin-so:function]
        [-r {0|1|2...7}[:{0|1|2...7}]]
        [-m {1|2|3...256}]
        [-c [clocks-per-second]]
@@ -42,12 +47,17 @@ z80con [-p {i|o} {00|01|02...FF} my-plugin-so:function]
        my-program.bin
 ```
 
-- `[-p I/O ポート番号 共有ライブラリ:関数名]` _optional_
-  - User Plugin Port の割り当て
+- `[-p {i|o} ポート番号 共有ライブラリ:関数名]` _optional_
+  - Plugin の割り当て
   - 共有ライブラリは プリフィクス lib と 拡張子 .so を省略して指定
     - 例: `libhoge.so` なら `hoge` と指定する
-  - User Plugin Port は 0 個以上の複数を割り当て可能
-  - 同一ポートの User Plugin Port を複数指定した場合、右側に指定したものが有効
+  - Plugin は 0 個以上の複数を割り当て可能
+  - 同一ポートの Plugin を複数指定した場合、右側に指定したものが有効
+- `[-p {r|w} アドレスページ番号 共有ライブラリ:関数名]` _optional_
+  - Memory Mapped I/O の割り当て
+  - アドレスページ番号は、メモリマップ対象とするアドレスの上位 8bit を指定する  
+  - Memory Mapped I/O は 0 個以上の複数を割り当て可能
+  - 同一アドレスページ番号の Memory Mapped I/O を複数指定した場合、右側に指定したものが有効
 - `[-r {0|1|2...7}[:{0|1|2...7}]]` _optional_
   - RAM の割り当て範囲（バンク番号）
   - デフォルト（省略時）は `-r 4:7` (`-r 4` or `-r 7:4` と等価) を仮定
@@ -90,10 +100,12 @@ z80con [-p {i|o} {00|01|02...FF} my-plugin-so:function]
 ## I/O Map
 
 - System Ports: 0x00 ~ 0x0F
-  - Console Computer for Z80 のシステムポート
-  - User Plugin Ports を優先させることも可能
-- User Plugin Ports: 0x10 ~ 0xFF
-  - 外部プラグイン用ポート
+  - Console Computer のシステムポート
+  - Plugins を優先させることも可能
+- Plugins: 0x00 ~ 0xFF
+  - Plugin を割り当てできるポート
+  - Plugin の方が System Ports よりも優先が高い
+    - System Ports に対して Plugin 上書き割り当てすると、対応するシステム I/O が使えなくなる
 
 | Port | I | O | Description |
 |:-:|:-:|:-:|:-|
@@ -170,36 +182,41 @@ SAMPLE_TEXT:
    db "Hello, World!", $0A
 ```
 
-## User Plugin Port
+## Plugin
 
-Console Computer for Z80 は、**プログラム実行** と **コマンドライン入出力** のみ実行できる最小限の I/O のみ提供していますが、このままではせいぜいハノイの塔ぐらいしか作れません。
+Console Computer は、**プログラム実行** と **標準入出力** のみ実現できる最小限の I/O のみ提供していますが、このままではせいぜいハノイの塔ぐらいしか作れません。
 
-例えば、FM音源 や PSG音源を搭載して音楽を再生、計測器との入出力、インターネット経由でサーバと通信などは、User Plugin Port を定義することで実現できます。
+例えば、FM音源 や PSG音源を搭載して音楽を再生、計測器との入出力、インターネット経由でサーバと通信などは、Plugin を定義することで実現できます。
 
-User Plugin Port は、コマンドラインで指定した共有ライブラリ（将来的に Windows に対応時は DLL）に定義されている指定関数がコールバックされます。
+Plugin の実体は、対応するポート番号への IN/OUT 命令が実行された時にコールバックされる関数です。
 
 ### Minimum Example
 
 例えば、
 
 ```bash
-z80con -p i F0 hoge:in -p o F1 hoge:out program.bin
+z80con -p i F0 plugin:in
+       -p o F1 plugin:out
+       -p o F2 plugin:out
+       program.bin
 ```
 
-というコマンドライン指定で z80con を実行した場合、共有ライブラリ `libhoge.so` の最小実装は次のようになります。
+上記のように `z80con` を実行する時の共有ライブラリ `libplugin.so` の最小実装は、次のようになります。
 
 ```cpp
-// hoge.cpp (libhoge.soの最小実装)
+// plugin.cpp (libplugin.soの最小実装)
 
-extern "C" unsigned char in(void* z80console, unsigned char port) {
-    return 0xFF;
+extern "C" unsigned char in(void* z80console, unsigned char port)
+{
+    // program.bin から IN A, ($F0) が実行された時の処理を記述
+    return 0xFF; // IN に戻す値を return
 }
 
-extern "C" void out(void* z80console, unsigned char port, unsigned char value) {
+extern "C" void out(void* z80console, unsigned char port, unsigned char value)
+{
+    // program.bin から　OUT ($F1), A or OUT ($F2), A が実行された時の処理を記述
 }
 ```
-
-そして、 `program.bin` で `IN A, ($F0)` が実行されると上記の `in` 関数がコールバックされ、`OUT ($F1), A` が実行されると上記の `out` 関数がコールバックされます。
 
 ### Input Function Prototype
 
@@ -209,7 +226,7 @@ extern "C" unsigned char functionName(void* z80console, unsigned char port);
 
 - 引数:
   - `z80console`:
-    - 呼び出し元 Console Computer for Z80 のインスタンス
+    - 呼び出し元 Console Computer のインスタンス
     - [z80console.hpp](src/z80console.hpp) を `include` して　`Z80Console*` へキャスト可能
   - `port`: 入力ポート番号
 - 戻り値: ポート入力の結果を `0` ~ `255` の範囲で返す
@@ -222,7 +239,7 @@ extern "C" void functionName(void* z80console, unsigned char port, unsigned char
 
 - 引数:
   - `z80console`:
-    - 呼び出し元 Console Computer for Z80 のインスタンス
+    - 呼び出し元 Console Computer のインスタンス
     - [z80console.hpp](src/z80console.hpp) を `include` して　`Z80Console*` へキャスト可能
   - `port`: 出力ポート番号
   - `value`: 出力値
@@ -230,17 +247,17 @@ extern "C" void functionName(void* z80console, unsigned char port, unsigned char
 
 ### Handle Start
 
-C規約で `start` 関数を定義することで、Console Computer for Z80 起動時の初期化処理を定義することができます。
+C規約で `start` 関数を次のように定義することで、Console Computer 起動時の初期化処理を定義することができます。
 
 ```c++
 extern "C" void start(void* z80console) {
-    // Console Computer for Z80 起動時の初期化処理を記述
+    // Console Computer 起動時の初期化処理を記述
 }
 ```
 
 - 引数:
   - `z80console`:
-    - 呼び出し元 Console Computer for Z80 のインスタンス
+    - 呼び出し元 Console Computer のインスタンス
     - [z80console.hpp](src/z80console.hpp) を `include` して　`Z80Console*` へキャスト可能
 - 戻り値: n/a
 - Remarks:
@@ -249,17 +266,17 @@ extern "C" void start(void* z80console) {
 
 ### Handle End
 
-C規約で `end` 関数を定義することで、Console Computer for Z80 停止時の終了処理を定義することができます。
+C規約で `end` 関数を定義することで、Console Computer 停止時の終了処理を定義することができます。
 
 ```c++
 extern "C" void end(void* z80console) {
-    // Console Computer for Z80 停止時の終了処理を記述
+    // Console Computer 停止時の終了処理を記述
 }
 ```
 
 - 引数:
   - `z80console`:
-    - 呼び出し元 Console Computer for Z80 のインスタンス
+    - 呼び出し元 Console Computer のインスタンス
     - [z80console.hpp](src/z80console.hpp) を `include` して　`Z80Console*` へキャスト可能
 - 戻り値: n/a
 - Remarks:
@@ -270,11 +287,46 @@ extern "C" void end(void* z80console) {
 
 ## Memory Mapped I/O
 
-TODO
+Memory Mapped I/O とは、アドレスを 256 バイト区切りの 256 ページとみなし、各アドレスページへのアクセスをトラップして外部入出力を行う機能です。
+
+例えば、16KB の VRAM（ビデオメモリ）を持つデバイス（TMS9918Aなど）にアクセスする際、CPU アドレスの 0x8000 ~ 0xBFFF の範囲（ページ 0x80 ~ 0xBF）の範囲を Memory Mapped I/O とすることで、Plugin よりもシンプルなプログラムで VRAM アクセスが実現できます。
+
+### Read Function Prototype
+
+```c++
+extern "C" unsigned char functionName(void* z80console, unsigned short addr);
+```
+
+- 引数:
+  - `z80console`:
+    - 呼び出し元 Console Computer のインスタンス
+    - [z80console.hpp](src/z80console.hpp) を `include` して　`Z80Console*` へキャスト可能
+  - `addr`: 読み込み先アドレス
+- 戻り値: アドレスからの入力結果を `0` ~ `255` の範囲で返す
+
+### Write Function Prototype
+
+```c++
+extern "C" void functionName(void* z80console, unsigned short addr, unsigned char value);
+```
+
+- 引数:
+  - `z80console`:
+    - 呼び出し元 Console Computer のインスタンス
+    - [z80console.hpp](src/z80console.hpp) を `include` して　`Z80Console*` へキャスト可能
+  - `addr`: 書き込み先アドレス
+  - `value`: 書き込み先アドレスへの出力値
+- 戻り値: n/a
+
+### Handle Start/End
+
+- Plugin と同様、 `start` と `end` 関数で初期化・終了処理を記述可能
+  - [Handle Start](#handle-start)
+  - [Handle End](#handle-end)
 
 ## Licenses
 
-### Console Computer for Z80 - Emulator (MIT)
+### Console Computer - Emulator (MIT)
 
 See the [LICENSE.txt](LICENSE.txt)
 
