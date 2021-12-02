@@ -4,7 +4,7 @@
 
 - Console Computer は、標準では標準入出力機能だけもつ極めてシンプルなコンピュータでありながら、プラグインと Memory Mapped I/O により柔軟な拡張性を併せ持つ **シンプル　＆　自由 な　汎用コンピュータ** です。
 - Console Computer for Z80 は、Console Computer のプログラムを Z80 で記述できます。
-- 本リポジトリは Console Computer の [エミュレータ](src/z80console.hpp)、[UNIX用CLI実装](src/cli_unix.cpp)、[Example](example) を提供します。
+- 本リポジトリは Console Computer for Z80 の [エミュレータ](src/z80console.hpp)、[UNIX用CLI実装](src/cli_unix.cpp)、[Example](example) を提供します。
 
 ## System Configuration
 

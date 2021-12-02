@@ -1,5 +1,5 @@
 /**
- * Cosnole Computer for Z80 - Command Line Interface
+ * Cosnole Computer for Z80 - Command Line Interface for UNIX
  * -----------------------------------------------------------------------------
  * The MIT License (MIT)
  * 

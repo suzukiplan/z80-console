@@ -34,9 +34,7 @@
 class Z80Console
 {
   private:
-    unsigned char ramBankIndexStart;
-    unsigned char ramBankIndexEnd;
-    inline bool isRamIndex(int n) { return ramBankIndexStart <= n && n <= ramBankIndexEnd; }
+    inline bool isRamIndex(int n) { return ctx.ramBankIndexStart <= n && n <= ctx.ramBankIndexEnd; }
 
     class Handler
     {
@@ -54,15 +52,22 @@ class Z80Console
         std::vector<Handler*> endHandlers;
     } devices;
 
-    int romCount;
-    int ramCount;
-    unsigned char rom[256][8192];
-    unsigned char ram[256][8192];
-    unsigned char banks[8];
-    bool startFlag;
-    bool endFlag;
+    struct Context {
+        unsigned char banks[8];
+        unsigned char ramBankIndexStart;
+        unsigned char ramBankIndexEnd;
+        unsigned char startFlag;
+        unsigned char endFlag;
+        unsigned char reserved[4];
+    } ctx;
 
   public:
+    struct Memory {
+        int count;
+        unsigned char data[256][8192];
+    };
+    struct Memory rom;
+    struct Memory ram;
     Z80* cpu;
 
     Z80Console()
@@ -73,16 +78,16 @@ class Z80Console
             // Shutdown the ConsoleComputer when call the RET instruction when SP equals 0
             if (0 == _this->cpu->reg.SP) {
                 for (auto handler : _this->devices.endHandlers) handler->callback(arg);
-                _this->endFlag = true;
+                _this->ctx.endFlag = true;
                 _this->cpu->requestBreak();
             }
         });
-        romCount = 0;
-        memset(rom, 0, sizeof(rom));
-        ramCount = 256;
-        ramBankIndexStart = 4;
-        ramBankIndexEnd = 7;
-        endFlag = false;
+        rom.count = 0;
+        memset(rom.data, 0, sizeof(rom.data));
+        ram.count = 256;
+        ctx.ramBankIndexStart = 4;
+        ctx.ramBankIndexEnd = 7;
+        ctx.endFlag = false;
         reset();
     }
 
@@ -98,117 +103,117 @@ class Z80Console
     void reset()
     {
         memset(&devices, 0, sizeof(devices));
-        memset(ram, 0, sizeof(ram));
+        memset(ram.data, 0, sizeof(ram.data));
         memset(&cpu->reg, 0, sizeof(cpu->reg));
-        resetBanks(ramBankIndexStart, ramBankIndexEnd);
-        startFlag = false;
-        if (endFlag) {
+        resetBanks(ctx.ramBankIndexStart, ctx.ramBankIndexEnd);
+        ctx.startFlag = false;
+        if (ctx.endFlag) {
             for (auto handler : devices.endHandlers) handler->callback(this);
-            endFlag = false;
+            ctx.endFlag = false;
         }
     }
 
-    bool isEnded() { return this->endFlag; }
-    int getRomCount() { return this->romCount; }
-    int getRamCount() { return this->ramCount; }
+    bool isEnded() { return this->ctx.endFlag; }
+    int getRomCount() { return this->rom.count; }
+    int getRamCount() { return this->ram.count; }
     int getReturnCode() { return this->cpu->reg.pair.A; }
 
     bool addOutputDevice(unsigned char portNumber, void (*out)(void*, unsigned char, unsigned char))
     {
-        if (startFlag) return false;
+        if (ctx.startFlag) return false;
         devices.out[portNumber] = out;
         return true;
     }
 
     bool addInputDevice(unsigned char portNumber, unsigned char (*in)(void*, unsigned char))
     {
-        if (startFlag) return false;
+        if (ctx.startFlag) return false;
         devices.in[portNumber] = in;
         return true;
     }
 
     bool addWriteMemoryMap(unsigned short address, void (*write)(void*, unsigned short, unsigned char))
     {
-        if (startFlag) return false;
+        if (ctx.startFlag) return false;
         devices.write[(address & 0xFF00) >> 8] = write;
         return true;
     }
 
     bool addReadMemoryMap(unsigned short address, unsigned char (*read)(void*, unsigned short))
     {
-        if (startFlag) return false;
+        if (ctx.startFlag) return false;
         devices.read[(address & 0xFF00) >> 8] = read;
         return true;
     }
 
     bool addStartHandler(void (*handler)(void*))
     {
-        if (startFlag) return false;
+        if (ctx.startFlag) return false;
         devices.startHandlers.push_back(new Handler(handler));
         return true;
     }
 
     bool addEndHandler(void (*handler)(void*))
     {
-        if (startFlag) return false;
+        if (ctx.startFlag) return false;
         devices.endHandlers.push_back(new Handler(handler));
         return true;
     }
 
     bool setRamCount(int ramCount)
     {
-        if (startFlag) return false;
+        if (ctx.startFlag) return false;
         if (ramCount < 1) {
-            this->ramCount = 1;
+            ram.count = 1;
         } else if (256 < ramCount) {
-            this->ramCount = 256;
+            ram.count = 256;
         } else {
-            this->ramCount = ramCount;
+            ram.count = ramCount;
         }
         return true;
     }
 
     bool addRomData(const void* data, int dataSize)
     {
-        if (startFlag) return false;
+        if (ctx.startFlag) return false;
         const char* ptr = (const char*)data;
-        while (0 < dataSize && romCount < 256) {
+        while (0 < dataSize && rom.count < 256) {
             if (0x2000 <= dataSize) {
-                memcpy(rom[romCount], ptr, 0x2000);
+                memcpy(rom.data[rom.count], ptr, 0x2000);
                 ptr += 0x2000;
                 dataSize -= 0x2000;
             } else {
-                memset(rom[romCount], 0, 0x2000);
-                memcpy(rom[romCount], ptr, dataSize);
+                memset(rom.data[rom.count], 0, 0x2000);
+                memcpy(rom.data[rom.count], ptr, dataSize);
                 dataSize -= dataSize;
             }
-            romCount++;
+            rom.count++;
         }
         return true;
     }
 
     bool resetBanks(int ramStart, int ramEnd = 7)
     {
-        if (startFlag) return false;
+        if (ctx.startFlag) return false;
         ramStart &= 0b111;
         ramEnd &= 0b111;
         if (ramStart < ramEnd) {
-            this->ramBankIndexStart = ramStart;
-            this->ramBankIndexEnd = ramEnd;
+            this->ctx.ramBankIndexStart = ramStart;
+            this->ctx.ramBankIndexEnd = ramEnd;
         } else {
-            this->ramBankIndexStart = ramEnd;
-            this->ramBankIndexEnd = ramStart;
+            this->ctx.ramBankIndexStart = ramEnd;
+            this->ctx.ramBankIndexEnd = ramStart;
         }
         int romBankIndex = 0;
-        for (int i = 0; i < ramBankIndexStart; i++) {
-            this->banks[i] = romBankIndex++;
+        for (int i = 0; i < ctx.ramBankIndexStart; i++) {
+            ctx.banks[i] = romBankIndex++;
         }
-        for (int i = ramBankIndexStart, n = 0; i <= ramBankIndexEnd; i++, n++) {
-            this->banks[i] = n;
+        for (int i = ctx.ramBankIndexStart, n = 0; i <= ctx.ramBankIndexEnd; i++, n++) {
+            ctx.banks[i] = n;
         }
-        if (ramBankIndexEnd < 7) {
-            for (int i = ramBankIndexEnd; i < 8; i++) {
-                this->banks[i] = romBankIndex++;
+        if (ctx.ramBankIndexEnd < 7) {
+            for (int i = ctx.ramBankIndexEnd; i < 8; i++) {
+                ctx.banks[i] = romBankIndex++;
             }
         }
         return true;
@@ -216,10 +221,10 @@ class Z80Console
 
     int execute(int clocks)
     {
-        if (romCount < 1 || endFlag) return 0;
-        if (!startFlag) {
+        if (rom.count < 1 || ctx.endFlag) return 0;
+        if (!ctx.startFlag) {
             for (auto handler : devices.startHandlers) handler->callback(this);
-            startFlag = true;
+            ctx.startFlag = true;
         }
         return cpu->execute(clocks);
     }
@@ -227,40 +232,40 @@ class Z80Console
     inline static unsigned char readMemory(void* ctx, unsigned short addr)
     {
         auto _this = (Z80Console*)ctx;
-        if (!_this->startFlag || _this->endFlag) return 0xFF;
+        if (!_this->ctx.startFlag || _this->ctx.endFlag) return 0xFF;
         unsigned char page = (addr & 0xFF00) >> 8;
         if (_this->devices.read[page]) {
             return _this->devices.read[page](ctx, addr);
         }
         int n = (addr & 0xE000) >> 13;
         if (_this->isRamIndex(n)) {
-            return _this->ram[n % _this->ramCount][addr & 0x1FFF];
+            return _this->ram.data[n % _this->ram.count][addr & 0x1FFF];
         } else {
-            return _this->rom[n % _this->romCount][addr & 0x1FFF];
+            return _this->rom.data[n % _this->rom.count][addr & 0x1FFF];
         }
     }
 
     inline static void writeMemory(void* ctx, unsigned short addr, unsigned char value)
     {
         auto _this = (Z80Console*)ctx;
-        if (!_this->startFlag || _this->endFlag) return;
+        if (!_this->ctx.startFlag || _this->ctx.endFlag) return;
         unsigned char page = (addr & 0xFF00) >> 8;
         if (_this->devices.write[page]) {
             _this->devices.write[page](ctx, addr, value);
             return;
         }
         int n = (addr & 0xE000) >> 13;
-        if (_this->isRamIndex(n)) _this->ram[n % _this->ramCount][addr & 0x1FFF] = value;
+        if (_this->isRamIndex(n)) _this->ram.data[n % _this->ram.count][addr & 0x1FFF] = value;
     }
 
     inline static unsigned char inPort(void* ctx, unsigned char portNumber)
     {
         auto _this = (Z80Console*)ctx;
-        if (!_this->startFlag || _this->endFlag) return 0xFF;
+        if (!_this->ctx.startFlag || _this->ctx.endFlag) return 0xFF;
         if (_this->devices.in[portNumber]) {
             return _this->devices.in[portNumber](_this->cpu, portNumber);
         } else {
-            if (portNumber < 8) return _this->banks[portNumber];
+            if (portNumber < 8) return _this->ctx.banks[portNumber];
             if (0x0F == portNumber) {
                 char buf[0x10000];
                 printf("> ");
@@ -285,12 +290,12 @@ class Z80Console
     inline static void outPort(void* ctx, unsigned char portNumber, unsigned char value)
     {
         auto _this = (Z80Console*)ctx;
-        if (!_this->startFlag || _this->endFlag) return;
+        if (!_this->ctx.startFlag || _this->ctx.endFlag) return;
         if (_this->devices.out[portNumber]) {
             _this->devices.out[portNumber](_this->cpu, portNumber, value);
         } else {
             if (portNumber < 8) {
-                _this->banks[portNumber] = value;
+                _this->ctx.banks[portNumber] = value;
             } else if (0x0F == portNumber) {
                 char buf[257];
                 unsigned short addr = _this->cpu->reg.pair.H;
