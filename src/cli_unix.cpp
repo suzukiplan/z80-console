@@ -224,10 +224,6 @@ int main(int argc, char* argv[])
     Z80Console console;
     std::map<std::string, void*> dlHandles;
 
-    char cwd[PATH_MAX];
-    getcwd(cwd, sizeof(cwd));
-    setenv("LD_LIBRARY_PATH", cwd, true);
-
     for (int i = 1; i < argc; i++) {
         if ('-' == argv[i][0]) {
             switch (argv[i][1]) {
