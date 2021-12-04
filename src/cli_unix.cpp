@@ -33,6 +33,7 @@
 static void printUsage()
 {
     fprintf(stderr, "usage: z80con [-p {i|o} {00|01|02...FF} my-plugin-so:function]\n");
+    fprintf(stderr, "              [-m {r|w} {00|01|02...FF} my-mmap-so:function]");
     fprintf(stderr, "              [-r {0|1|2...7}[:{0|1|2...7}]]\n");
     fprintf(stderr, "              [-c [clocks-per-second]]\n");
     fprintf(stderr, "              [-v [{stdout|stderr}]]\n");
@@ -179,6 +180,44 @@ static bool addPlugin(Z80Console& console, std::map<std::string, void*>& dlHandl
     return true;
 }
 
+static bool addMemoryMap(Z80Console& console, std::map<std::string, void*>& dlHandles, char* arg1, char* arg2, char* arg3)
+{
+    bool isInput;
+    switch (arg1[0]) {
+        case 'r': isInput = true; break;
+        case 'w': isInput = false; break;
+        default:
+            fprintf(stderr, "error: Unknown mmap type (%s)\n", arg1);
+            printUsage();
+            return false;
+    }
+    unsigned short addr = hex2int(arg2) & 0xFF;
+    addr <<= 8;
+    char* lib = arg3;
+    char* symbol = strchr(lib, ':');
+    if (!symbol) {
+        fprintf(stderr, "error: mmap symbol not specified (%s)\n", arg3);
+        printUsage();
+        return false;
+    }
+    *symbol++ = '\0';
+    fprintf(stderr, "Loading lib%s.so ... ", lib);
+    void* ptr = searchSymbol(console, dlHandles, lib, symbol);
+    if (!ptr) {
+        fprintf(stderr, "error while loading symbol (%s:%s)\n", lib, symbol);
+        perror("Reason");
+        return false;
+    } else {
+        fprintf(stderr, "succeed\n");
+    }
+    if (isInput) {
+        console.addReadMemoryMap(addr, (unsigned char (*)(void*, unsigned short))ptr);
+    } else {
+        console.addWriteMemoryMap(addr, (void (*)(void*, unsigned short, unsigned char))ptr);
+    }
+    return true;
+}
+
 int main(int argc, char* argv[])
 {
     Z80Console console;
@@ -194,6 +233,18 @@ int main(int argc, char* argv[])
                         return -1;
                     }
                     if (!addPlugin(console, dlHandles, argv[i + 1], argv[i + 2], argv[i + 3])) {
+                        return -1;
+                    }
+                    i += 3;
+                    break;
+                }
+                case 'm': {
+                    if (argc <= i + 3) {
+                        fprintf(stderr, "error: Missing argument for -m option\n");
+                        printUsage();
+                        return -1;
+                    }
+                    if (!addMemoryMap(console, dlHandles, argv[i + 1], argv[i + 2], argv[i + 3])) {
                         return -1;
                     }
                     i += 3;

@@ -1,10 +1,10 @@
 # Console Computer for Z80 - Emulator
 
-## About
+Console Computer は、標準では標準入出力機能だけもつ極めてシンプルなコンピュータでありながら、プラグインと Memory Mapped I/O により柔軟な拡張性を併せ持つ **シンプル＆自由な汎用コンピュータ** です。
 
-- Console Computer は、標準では標準入出力機能だけもつ極めてシンプルなコンピュータでありながら、プラグインと Memory Mapped I/O により柔軟な拡張性を併せ持つ **シンプル　＆　自由 な　汎用コンピュータ** です。
-- Console Computer for Z80 は、Console Computer のプログラムを Z80 で記述できます。
-- 本リポジトリは Console Computer for Z80 の [エミュレータ](src/z80console.hpp)、[UNIX用CLI実装](src/cli_unix.cpp)、[Example](example) を提供します。
+Console Computer for Z80 は、Console Computer のプログラムを Z80 で記述できます。
+
+本リポジトリは、Console Computer for Z80 の [エミュレータ](src/z80console.hpp)、[UNIX+互換機用CLI実装](src/cli_unix.cpp)、[Example](example) を提供します。
 
 ## System Configuration
 
@@ -15,7 +15,7 @@
 - MMU _(Memory Mangement Unit)_
   - 8KB 区切り (8ページ) で最大 256 バンクに切り替え可能な MMU を搭載
     - プログラム（ROM）サイズ: 最小 8KB 〜 最大 8KB x 256 (2MB)
-    - メインメモリ（RAM）サイズ: 最小 8KB 〜 最大 8KB x 256 (2MB)
+    - メインメモリ（RAM）サイズ: 8KB x 256 (2MB)
 - I/O:
   - 標準では最小限のシステム I/O のみ提供:
     - 0x00 ~ 0x07: バンク切り替え
@@ -39,9 +39,9 @@ C++11 以降の Clang C++ でコンパイルできます。
 ### z80con
 
 ```bash
-z80con [-p {i|o|r|w} {00|01|02...FF} my-plugin-so:function]
+z80con [-p {i|o} {00|01|02...FF} my-plugin-so:function]
+       [-m {r|w} {00|01|02...FF} my-mmap-so:function]
        [-r {0|1|2...7}[:{0|1|2...7}]]
-       [-m {1|2|3...256}]
        [-c [clocks-per-second]]
        [-v [{stdout|stderr}]]
        my-program.bin
@@ -53,7 +53,7 @@ z80con [-p {i|o|r|w} {00|01|02...FF} my-plugin-so:function]
     - 例: `libhoge.so` なら `hoge` と指定する
   - Plugin は 0 個以上の複数を割り当て可能
   - 同一ポートの Plugin を複数指定した場合、右側に指定したものが有効
-- `[-p {r|w} アドレスページ番号 共有ライブラリ:関数名]` _optional_
+- `[-m {r|w} {00|01|02...FF} my-mmap-so:function]` _optional_
   - Memory Mapped I/O の割り当て
   - アドレスページ番号は、メモリマップ対象とするアドレスの上位 8bit を指定する  
   - Memory Mapped I/O は 0 個以上の複数を割り当て可能
@@ -61,9 +61,6 @@ z80con [-p {i|o|r|w} {00|01|02...FF} my-plugin-so:function]
 - `[-r {0|1|2...7}[:{0|1|2...7}]]` _optional_
   - RAM の割り当て範囲（バンク番号）
   - デフォルト（省略時）は `-r 4:7` (`-r 4` or `-r 7:4` と等価) を仮定
-- `[-m {1|2|3...256}]` _optional_
-  - RAM の搭載ユニット数 (1unit = 8KB)
-  - 省略時は 256 (2MB) を仮定
 - `[-c [clocks-per-second]]` _optional_
   - CPU クロック周波数を指定して同期
   - 指定省略時は実行端末のベストエフォート (= 同期無し) で動作
@@ -287,7 +284,7 @@ extern "C" void end(void* z80console) {
 
 ## Memory Mapped I/O
 
-Memory Mapped I/O とは、アドレスを 256 バイト区切りの 256 ページとみなし、各アドレスページへのアクセスをトラップして外部入出力を行う機能です。
+Memory Mapped I/O とは、アドレスを 256 バイト区切りの 256 ページとして、各アドレスページへのアクセスをトラップして外部入出力を行うことができます。
 
 例えば、16KB の VRAM（ビデオメモリ）を持つデバイス（TMS9918Aなど）にアクセスする際、CPU アドレスの 0x8000 ~ 0xBFFF の範囲（ページ 0x80 ~ 0xBF）の範囲を Memory Mapped I/O とすることで、Plugin よりもシンプルなプログラムで VRAM アクセスが実現できます。
 
