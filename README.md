@@ -2,7 +2,7 @@
 
 Console Computer は、標準では標準入出力機能だけもつ極めてシンプルなコンピュータでありながら、プラグインと Memory Mapped I/O により柔軟な拡張性を併せ持つ **シンプル＆自由な汎用コンピュータ** です。
 
-Console Computer for Z80 は、Console Computer のプログラムを Z80 で記述できます。
+Console Computer for Z80 は、Console Computer のプログラムを Z80 で記述できます。Z80 ベースのハードウェア（エミュレータを含む）を新規に設計したり、既存の Z80 ベースのハードウェア（エミュレータを含む）上で動作するプログラムを記述するのに適したベースシステムとなることを目指しています。
 
 本リポジトリは、Console Computer for Z80 の [エミュレータ](src/z80console.hpp)、[UNIX+互換機用CLI実装](src/cli_unix.cpp)、[Example](example) を提供します。
 
@@ -188,100 +188,9 @@ Console Computer は、**プログラム実行** と **標準入出力** のみ�
 
 Plugin の実体は、対応するポート番号への IN/OUT 命令が実行された時にコールバックされる関数です。
 
-### Minimum Example
+詳しくは以下の Example を参照してください。
 
-例えば、
-
-```bash
-z80con -p i F0 plugin:in
-       -p o F1 plugin:out
-       -p o F2 plugin:out
-       program.bin
-```
-
-上記のように `z80con` を実行する時の共有ライブラリ `libplugin.so` の最小実装は、次のようになります。
-
-```cpp
-// plugin.cpp (libplugin.soの最小実装)
-
-extern "C" unsigned char in(void* z80console, unsigned char port)
-{
-    // program.bin から IN A, ($F0) が実行された時の処理を記述
-    return 0xFF; // IN に戻す値を return
-}
-
-extern "C" void out(void* z80console, unsigned char port, unsigned char value)
-{
-    // program.bin から　OUT ($F1), A or OUT ($F2), A が実行された時の処理を記述
-}
-```
-
-### Input Function Prototype
-
-```c++
-extern "C" unsigned char functionName(void* z80console, unsigned char port);
-```
-
-- 引数:
-  - `z80console`:
-    - 呼び出し元 Console Computer のインスタンス
-    - [z80console.hpp](src/z80console.hpp) を `include` して　`Z80Console*` へキャスト可能
-  - `port`: 入力ポート番号
-- 戻り値: ポート入力の結果を `0` ~ `255` の範囲で返す
-
-### Output Function Prototype
-
-```c++
-extern "C" void functionName(void* z80console, unsigned char port, unsigned char value);
-```
-
-- 引数:
-  - `z80console`:
-    - 呼び出し元 Console Computer のインスタンス
-    - [z80console.hpp](src/z80console.hpp) を `include` して　`Z80Console*` へキャスト可能
-  - `port`: 出力ポート番号
-  - `value`: 出力値
-- 戻り値: n/a
-
-### Handle Start
-
-C規約で `start` 関数を次のように定義することで、Console Computer 起動時の初期化処理を定義することができます。
-
-```c++
-extern "C" void start(void* z80console) {
-    // Console Computer 起動時の初期化処理を記述
-}
-```
-
-- 引数:
-  - `z80console`:
-    - 呼び出し元 Console Computer のインスタンス
-    - [z80console.hpp](src/z80console.hpp) を `include` して　`Z80Console*` へキャスト可能
-- 戻り値: n/a
-- Remarks:
-  - `start` 関数は 1 つの共有ライブラリにつき 1 回のみコールされる
-  - リセットが実行された後の最初の実行のタイミングでも再コールされる
-
-### Handle End
-
-C規約で `end` 関数を定義することで、Console Computer 停止時の終了処理を定義することができます。
-
-```c++
-extern "C" void end(void* z80console) {
-    // Console Computer 停止時の終了処理を記述
-}
-```
-
-- 引数:
-  - `z80console`:
-    - 呼び出し元 Console Computer のインスタンス
-    - [z80console.hpp](src/z80console.hpp) を `include` して　`Z80Console*` へキャスト可能
-- 戻り値: n/a
-- Remarks:
-  - `end` 関数は 1 つの共有ライブラリにつき 1 回のみコールされる
-  - `end` は次の契機でコールされる:
-    - 停止状態になった時（SP が 0 の時に RET が呼び出されると停止状態になる）
-    - 停止状態になる前にリセットが実行された時
+[example/plugin](example/plugin)
 
 ## Memory Mapped I/O
 
