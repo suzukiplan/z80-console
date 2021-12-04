@@ -81,6 +81,7 @@ z80con [-p {i|o} {00|01|02...FF} my-plugin-so:function]
 |:-:|:-|
 | [example/hello](example/hello) | `Hello, World!` と 改行 を 標準出力 |
 | [example/plugin](example/plugin) | Plugin の簡単な実行例 |
+| [example/mmap](example/mmap) | Memory Mapped I/O の簡単な実行例 |
 
 ## Default Memory Map
 
@@ -198,38 +199,9 @@ Memory Mapped I/O とは、アドレスを 256 バイト区切りの 256 ペー�
 
 例えば、16KB の VRAM（ビデオメモリ）を持つデバイス（TMS9918Aなど）にアクセスする際、CPU アドレスの 0x8000 ~ 0xBFFF の範囲（ページ 0x80 ~ 0xBF）の範囲を Memory Mapped I/O とすることで、Plugin よりもシンプルなプログラムで VRAM アクセスが実現できます。
 
-### Read Function Prototype
+詳しくは以下の Example を参照してください。
 
-```c++
-extern "C" unsigned char functionName(void* z80console, unsigned short addr);
-```
-
-- 引数:
-  - `z80console`:
-    - 呼び出し元 Console Computer のインスタンス
-    - [z80console.hpp](src/z80console.hpp) を `include` して　`Z80Console*` へキャスト可能
-  - `addr`: 読み込み先アドレス
-- 戻り値: アドレスからの入力結果を `0` ~ `255` の範囲で返す
-
-### Write Function Prototype
-
-```c++
-extern "C" void functionName(void* z80console, unsigned short addr, unsigned char value);
-```
-
-- 引数:
-  - `z80console`:
-    - 呼び出し元 Console Computer のインスタンス
-    - [z80console.hpp](src/z80console.hpp) を `include` して　`Z80Console*` へキャスト可能
-  - `addr`: 書き込み先アドレス
-  - `value`: 書き込み先アドレスへの出力値
-- 戻り値: n/a
-
-### Handle Start/End
-
-- Plugin と同様、 `start` と `end` 関数で初期化・終了処理を記述可能
-  - [Handle Start](#handle-start)
-  - [Handle End](#handle-end)
+[example/mmap](example/mmap)
 
 ## Licenses
 
