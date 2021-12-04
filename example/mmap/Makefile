@@ -2,6 +2,9 @@ CONSOLE=../../z80con
 PROJECT=mmap
 
 all: $(CONSOLE) $(PROJECT).bin libmmap.so
+	make exec LD_LIBRARY_PATH=`pwd`
+
+exec:
 	$(CONSOLE) -v $(PROJECT).bin -m r C1 mmap:readAddr -m w C2 mmap:writeAddr 
 
 clean:

@@ -3,6 +3,9 @@ PROJECT=plugin
 LD_LIBRARY_PATH=`pwd`
 
 all: $(CONSOLE) $(PROJECT).bin libplugin.so
+	make exec LD_LIBRARY_PATH=`pwd`
+
+exec:
 	$(CONSOLE) -v $(PROJECT).bin -p i C0 plugin:in -p o C1 plugin:out 
 
 clean:
