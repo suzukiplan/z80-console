@@ -80,6 +80,7 @@ z80con [-p {i|o} {00|01|02...FF} my-plugin-so:function]
 | Path | Description |
 |:-:|:-|
 | [example/hello](example/hello) | `Hello, World!` と 改行 を 標準出力 |
+| [example/plugin](example/plugin) | Plugin の簡単な実行例 |
 
 ## Default Memory Map
 

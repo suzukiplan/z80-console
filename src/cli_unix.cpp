@@ -163,7 +163,7 @@ static bool addPlugin(Z80Console& console, std::map<std::string, void*>& dlHandl
         return false;
     }
     *symbol++ = '\0';
-    fprintf(stderr, "Loading lib%s.so ... ", lib);
+    fprintf(stderr, "Loading %s from lib%s.so ... ", symbol, lib);
     void* ptr = searchSymbol(console, dlHandles, lib, symbol);
     if (!ptr) {
         fprintf(stderr, "error while loading symbol (%s:%s)\n", lib, symbol);
@@ -201,7 +201,7 @@ static bool addMemoryMap(Z80Console& console, std::map<std::string, void*>& dlHa
         return false;
     }
     *symbol++ = '\0';
-    fprintf(stderr, "Loading lib%s.so ... ", lib);
+    fprintf(stderr, "Loading %s from lib%s.so ... ", symbol, lib);
     void* ptr = searchSymbol(console, dlHandles, lib, symbol);
     if (!ptr) {
         fprintf(stderr, "error while loading symbol (%s:%s)\n", lib, symbol);
@@ -265,22 +265,6 @@ int main(int argc, char* argv[])
                     } else {
                         console.resetBanks(ramStart);
                     }
-                    break;
-                }
-                case 'm': {
-                    if (argc <= i + 1) {
-                        fprintf(stderr, "error: Missing argument for -m option\n");
-                        printUsage();
-                        return -1;
-                    }
-                    i++;
-                    int ramCount = atoi(argv[i]);
-                    if (ramCount < 0 || 256 < ramCount) {
-                        fprintf(stderr, "error: Invalid value of -m option (%d)\n", ramCount);
-                        printUsage();
-                        return -1;
-                    }
-                    console.setRamCount(ramCount);
                     break;
                 }
                 case 'v': {
