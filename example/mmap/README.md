@@ -1,6 +1,11 @@
-# Simple Memory Mapped I/O Example
+# [WIP] Simple Memory Mapped I/O Example
 
 Memory Mapped I/O の簡単な実行例です。
+
+## OS support status
+
+- [x] macOS
+- [ ] Linux
 
 ## Pre-requests
 

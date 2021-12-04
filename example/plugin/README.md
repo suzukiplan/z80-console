@@ -1,6 +1,11 @@
-# Simple Plugin Example
+# [WIP] Simple Plugin Example
 
 Plugin の簡単な実行例です。
+
+## OS support status
+
+- [x] macOS
+- [ ] Linux
 
 ## Pre-requests
 
