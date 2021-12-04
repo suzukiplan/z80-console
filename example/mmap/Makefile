@@ -20,5 +20,5 @@ $(PROJECT).bin: $(PROJECT).asm
 	z80asm -b $(PROJECT).asm
 
 libmmap.so: mmap.cpp
-	clang++ --std=c++11 -shared -undefined dynamic_lookup -o libmmap.so mmap.cpp
+	clang++ --std=c++11 -shared -o libmmap.so mmap.cpp
 
