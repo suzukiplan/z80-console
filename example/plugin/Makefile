@@ -1,5 +1,6 @@
 CONSOLE=../../z80con
 PROJECT=plugin
+LD_LIBRARY_PATH=`pwd`
 
 all: $(CONSOLE) $(PROJECT).bin libplugin.so
 	$(CONSOLE) -v $(PROJECT).bin -p i C0 plugin:in -p o C1 plugin:out 
