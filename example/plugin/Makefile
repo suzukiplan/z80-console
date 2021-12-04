@@ -21,5 +21,5 @@ $(PROJECT).bin: $(PROJECT).asm
 	z80asm -b $(PROJECT).asm
 
 libplugin.so: plugin.cpp
-	clang++ --std=c++11 -shared -o libplugin.so plugin.cpp
+	clang++ --std=c++11 -shared -fPIC -o libplugin.so plugin.cpp
 
