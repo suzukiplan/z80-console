@@ -205,7 +205,7 @@ static bool addMemoryMap(Z80Console& console, std::map<std::string, void*>& dlHa
     void* ptr = searchSymbol(console, dlHandles, lib, symbol);
     if (!ptr) {
         fprintf(stderr, "error while loading symbol (%s:%s)\n", lib, symbol);
-        perror("Reason");
+        fprintf(stderr, "Reason: %s\n", dlerror());
         return false;
     } else {
         fprintf(stderr, "succeed\n");
